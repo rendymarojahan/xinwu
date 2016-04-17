@@ -1,10 +1,10 @@
 // Ionic Starter App
-
+var fb = new Firebase("https://xinwu.firebaseio.com");
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic', 'starter.controllers', 'ionic-material', 'ionMdInput'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ionic-material', 'ionMdInput', , 'firebase', 'ngCordova'])
 
 .run(function($ionicPlatform) {
     $ionicPlatform.ready(function() {
@@ -45,7 +45,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'ionic-material', 'io
                 controller: 'ActivityCtrl'
             },
             'fabContent': {
-                template: '<button id="fab-activity" class="button button-fab button-fab-top-right expanded button-energized-900 flap"><i class="icon ion-paper-airplane"></i></button>',
+                template: '<button id="fab-activity" class="button button-fab button-fab-top-right expanded button-energized-900 flap" ui-sref="app.posting"><i class="icon ion-paper-airplane"></i></button>',
                 controller: function ($timeout) {
                     $timeout(function () {
                         document.getElementById('fab-activity').classList.toggle('on');
@@ -104,6 +104,42 @@ angular.module('starter', ['ionic', 'starter.controllers', 'ionic-material', 'io
         }
     })
 
+    .state('app.posting', {
+        url: '/posting',
+        views: {
+            'menuContent': {
+                templateUrl: 'templates/posting.html',
+                controller: 'PostingCtrl'
+            },
+            'fabContent': {
+                template: '<button id="fab-profile" class="button button-fab button-fab-bottom-right button-energized-900"><i class="icon ion-plus"></i></button>',
+                controller: function ($timeout) {
+                    /*$timeout(function () {
+                        document.getElementById('fab-profile').classList.toggle('on');
+                    }, 800);*/
+                }
+            }
+        }
+    })
+
+    .state('app.news', {
+        url: '/news',
+        views: {
+            'menuContent': {
+                templateUrl: 'templates/news.html',
+                controller: 'NewsCtrl'
+            },
+            'fabContent': {
+                template: '<button id="fab-profile" class="button button-fab button-fab-bottom-right button-energized-900"><i class="icon ion-plus"></i></button>',
+                controller: function ($timeout) {
+                    /*$timeout(function () {
+                        document.getElementById('fab-profile').classList.toggle('on');
+                    }, 800);*/
+                }
+            }
+        }
+    })
+
     .state('app.profile', {
         url: '/profile',
         views: {
@@ -124,5 +160,5 @@ angular.module('starter', ['ionic', 'starter.controllers', 'ionic-material', 'io
     ;
 
     // if none of the above states are matched, use this as the fallback
-    $urlRouterProvider.otherwise('/app/login');
+    $urlRouterProvider.otherwise('/app/activity');
 });
