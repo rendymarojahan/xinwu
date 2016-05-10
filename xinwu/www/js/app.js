@@ -45,7 +45,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
                 controller: 'ActivityCtrl'
             },
             'fabContent': {
-                template: '<button id="fab-activity" class="button button-fab button-fab-top-right expanded button-energized-900 flap" ui-sref="app.posting"><i class="icon ion-paper-airplane"></i></button>',
+                template: '<button id="fab-activity" class="button button-fab button-fab-top-right expanded button-energized-900 flap" ng-click="app.posting"><i class="icon ion-paper-airplane"></i></button>',
                 controller: function ($timeout) {
                     $timeout(function () {
                         document.getElementById('fab-activity').classList.toggle('on');
@@ -118,6 +118,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
                         document.getElementById('fab-profile').classList.toggle('on');
                     }, 800);*/
                 }
+            }
+        }
+    })
+
+    .state('app.picknewstype', {
+        url: "/newstype",
+        views: {
+            'menuContent': {
+                templateUrl: "templates/picknewstype.html",
+                controller: "pickNewsTypeCtrl"
             }
         }
     })
