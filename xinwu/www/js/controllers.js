@@ -87,12 +87,63 @@ angular.module('starter.controllers', [])
     };
 })
 
-.controller('LoginCtrl', function($scope, $timeout, $stateParams, ionicMaterialInk) {
-    $scope.$parent.clearFabs();
+.controller('LoginCtrl', function($scope, $timeout, $rootScope, ionicMaterialInk, $stateParams, $ionicHistory, $cacheFactory, $ionicLoading, $ionicPopup, $state, MembersFactory, myCache, CurrentUserService) {
+
+	$scope.$parent.clearFabs();
     $timeout(function() {
         $scope.$parent.hideHeader();
     }, 0);
     ionicMaterialInk.displayEffect();
+
+	$scope.user = {};
+    $scope.doLogIn = function (user) {
+        $ionicLoading.show({
+            template: '<ion-spinner icon="ios"></ion-spinner><br>Loggin In...'
+        });
+
+        /* Check user fields*/
+        if (!user.email || !user.password) {
+            $ionicLoading.hide();
+            $ionicPopup.alert({title: 'Login Failed', template: 'Please check your Email or Password!'});
+            return;
+        }
+
+        /* Authenticate User */
+        fb.authWithPassword({
+            "email": user.email,
+            "password": user.password
+        }, function (error, authData) {
+            if (error) {
+                //console.log("Login Failed!", error);
+                $ionicLoading.hide();
+                $ionicPopup.alert({title: 'Login Failed', template: 'Check your credentials and try again!'});
+            } else {
+                
+                MembersFactory.getMember(authData).then(function (thisuser) {
+
+                	$scope.firstname = thisuser.firstname;
+    				$scope.surename = thisuser.surename;
+    				$scope.fullname = function (){
+    					return $scope.firstname +" "+ $scope.surename;
+    				};
+                    
+                    /* Save user data for later use */
+                    myCache.put('thisUserName', $scope.fullname());
+                    myCache.put('thisMemberId', authData.uid);
+                    CurrentUserService.updateUser(thisuser);
+
+                    if (authData.uid === '') {
+                        $ionicLoading.hide();
+                        $state.go('app.login');
+                    } else {
+                        $ionicLoading.hide();
+                        $state.go('app.activity');
+                    }
+                });
+            }
+        });
+    }
+
 })
 
 .controller('FriendsCtrl', function($scope, $stateParams, $timeout, ionicMaterialInk, ionicMaterialMotion) {
@@ -211,7 +262,11 @@ angular.module('starter.controllers', [])
 
 .controller('pickNewsTypeCtrl', function ($scope, $ionicHistory, PickTransactionServices) {
 
+    $scope.$parent.showHeader();
+    $scope.$parent.clearFabs();
     $scope.isExpanded = false;
+    $scope.$parent.setExpanded(false);
+    $scope.$parent.setHeaderFab(false);
     $scope.NewsTypeList = [
         { text: 'News', value: 'News' },
         { text: 'Tutorial', value: 'Tutorial' },
@@ -223,7 +278,7 @@ angular.module('starter.controllers', [])
     };
 })
 
-.controller('PostingCtrl', function ($scope, $stateParams, $timeout, ionicMaterialInk, ionicMaterialMotion, $state, $ionicHistory, AccountsFactory, PickTransactionServices, PayeesService, myCache, CurrentUserService) {
+.controller('PostingCtrl', function ($scope, $stateParams, $timeout, ionicMaterialInk, ionicMaterialMotion, $state, $ionicActionSheet, $ionicHistory, AccountsFactory, PickTransactionServices, PayeesService, myCache, CurrentUserService) {
 
     $scope.$parent.showHeader();
     $scope.$parent.clearFabs();
@@ -287,8 +342,9 @@ angular.module('starter.controllers', [])
 	    $scope.firstname = CurrentUserService.firstname;
 	    $scope.surename = CurrentUserService.surename;
 	    $scope.fullname = function (){
-	        return $scope.firstname +" "+ $scope.surename;
+	    	return $scope.firstname +" "+ $scope.surename;
 	    };
+	    $scope.photo = CurrentUserService.photo;
 
 	    $scope.$on('$ionicView.beforeEnter', function () {
 	        $scope.hideValidationMessage = true;
@@ -316,19 +372,13 @@ angular.module('starter.controllers', [])
 	        if (typeof PickTransactionServices.dateSelected !== 'undefined' && PickTransactionServices.dateSelected !== '') {
 	            $scope.DisplayDate = PickTransactionServices.dateSelected;
 	        }
-	        // Handle transaction type
-	        if ($scope.currentItem.typedisplay === "Transfer" && $scope.currentItem.accountFromId === $scope.currentItem.accountToId) {
-	            PickTransactionServices.typeInternalSelected = 'Income';
-	        } else if ($scope.currentItem.typedisplay === "Transfer" && $scope.currentItem.accountFromId !== $scope.currentItem.accountToId) {
-	            PickTransactionServices.typeInternalSelected = 'Expense';
-	        }
 	        // Handle Two Ways Binding
-	        if ($scope.currentItem.typedisplay === "Transfer"){
-	            $scope.type = function (){ return "transfer ";};
-	        } else if ($scope.currentItem.typedisplay === "Income"){
-	            $scope.type = function (){ return "get ";};
-	        } else if ($scope.currentItem.typedisplay === "Expense"){
-	            $scope.type = function (){ return "spend ";};
+	        if ($scope.currentItem.typedisplay === "News"){
+	            $scope.type = function (){ return "add News ";};
+	        } else if ($scope.currentItem.typedisplay === "Tutorial"){
+	            $scope.type = function (){ return "add Tutorial ";};
+	        } else if ($scope.currentItem.typedisplay === "Tips"){
+	            $scope.type = function (){ return "add Tips ";};
 	        }
 	        if ($scope.currentItem.category !== ''){
 	            $scope.category = function (){ return " for " + $scope.currentItem.category;};
@@ -360,6 +410,71 @@ angular.module('starter.controllers', [])
 	            $state.go('tabsController.pickposttransactionpayee');
 	        }
 	    }
+
+	    $scope.pickPostPhoto = function() {
+	
+			$scope.hideSheet = $ionicActionSheet.show({
+
+				buttons: [
+	        		{ text: '<i class="icon ion-camera"></i> Take Picture' },
+	        		{ text: '<i class="icon ion-images"></i> Choose Album' },
+	    		],
+				buttonClicked: function(index) {
+					switch (index) {
+	                case 0:
+	                    $scope.currentItem = { photo: PickTransactionServices.photoSelected };
+	        				
+	            				var options = {
+				                quality: 75,
+				                destinationType: Camera.DestinationType.DATA_URL,
+				                sourceType: Camera.PictureSourceType.CAMERA,
+				                allowEdit: false,
+				                encodingType: Camera.EncodingType.JPEG,
+				                popoverOptions: CameraPopoverOptions,
+				                targetWidth: 800,
+				                targetHeight: 800,
+				                saveToPhotoAlbum: false
+	            				};
+					            $cordovaCamera.getPicture(options).then(function (imageData) {
+					                $scope.currentItem.photo = imageData;
+									PickTransactionServices.updatePhoto($scope.currentItem.photo);
+									$scope.currentItem.isphoto = true;
+					            }, function (error) {
+					                console.error(error);
+					            })
+
+	                break;
+	                case 1:
+	                	$scope.currentItem = { photo: PickTransactionServices.photoSelected };
+	            				var options = {
+				                quality: 75,
+				                destinationType: Camera.DestinationType.DATA_URL,
+				                sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+				                allowEdit: false,
+				                encodingType: Camera.EncodingType.JPEG,
+				                popoverOptions: CameraPopoverOptions,
+				                targetWidth: 800,
+				                targetHeight: 800,
+				                saveToPhotoAlbum: false
+	            				};
+					            $cordovaCamera.getPicture(options).then(function (imageData) {
+					                $scope.currentItem.photo = imageData;
+					                PickTransactionServices.updatePhoto($scope.currentItem.photo);
+					                $scope.currentItem.isphoto = true;
+					            }, function (error) {
+					                console.error(error);
+					            })
+	        			
+	                break;
+	            	}
+	            	return true;
+	    		},
+				cancelText: 'Cancel',
+					cancel: function() {
+					console.log('CANCELLED');
+				}
+			});	
+		}
 
 	    // SAVE
 	    $scope.saveTransaction = function () {

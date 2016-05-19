@@ -120,6 +120,7 @@ p {
     margin: 0px 20px;
     border-radius: 0px;
     background-color: #fff;
+    border: #070808;
 }
 .list {
     position: relative;

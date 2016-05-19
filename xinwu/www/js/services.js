@@ -11,7 +11,7 @@ angular.module('starter.services', [])
 })
 
 .factory('MembersFactory', function ($firebaseArray, $q, myCache, $timeout) {
-        var ref = fb.child("members");
+        var ref = fb.child("admins");
         var mRef = {};
         var members = {};
         mRef = fb.child("members").orderByChild('group_id');
@@ -486,11 +486,9 @@ angular.module('starter.services', [])
             this.firstname = user.firstname;
             this.surename = user.surename;
             this.email = user.email;
-            this.group_id = user.group_id;
-            this.public_id = user.public_id;
             this.defaultdate = user.defaultdate;
-            this.defaultbalance = user.defaultbalance;
             this.lastdate = user.lastdate;
+            this.photo = user.photo;
         }
 })
 
