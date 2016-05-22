@@ -261,12 +261,6 @@ angular.module('starter.controllers', [])
 })
 
 .controller('pickNewsTypeCtrl', function ($scope, $ionicHistory, PickTransactionServices) {
-
-    $scope.$parent.showHeader();
-    $scope.$parent.clearFabs();
-    $scope.isExpanded = false;
-    $scope.$parent.setExpanded(false);
-    $scope.$parent.setHeaderFab(false);
     $scope.NewsTypeList = [
         { text: 'News', value: 'News' },
         { text: 'Tutorial', value: 'Tutorial' },
